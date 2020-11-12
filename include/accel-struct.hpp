@@ -1,11 +1,12 @@
 #include <cstdint>
+#include <vector>
 #include "geom.hpp"
 
 namespace gpumagi {
 
 using u32 = unsigned;
 using f32 = float;
-
+/*
 struct BlasBuildConfig {
   u32 ntri;
   const u32* idxs;
@@ -30,6 +31,13 @@ BlasMemoryRequirement get_plain_blas_mem_req(const BlasBuildConfig& build_cfg) {
 }
 PlainBlas build_plain_blas(const BlasBuildConfig* tris, Triangle* blas_mem) {
   throw 0;
+}*/
+
+struct Traversable {
+  std::vector<Triangle> tris;
+};
+Traversable make_trav(const std::vector<Triangle>& tris) {
+  return Traversable { tris };
 }
 
 } // namespace gpumagi
