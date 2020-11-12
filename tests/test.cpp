@@ -71,6 +71,7 @@ thread_local TraversalTraceContext  trace_ctxt; // Only used during trace calls.
 
 // Trace a ray in `trav`.
 void trace(const Traversable* trav, const Ray& ray, f32 tmin, f32 tmax, u32 ich, u32 ims, void* payload) {
+  auto cur_stage = thread_ctxt.stage;
   trace_ctxt.trav = trav;
   trace_ctxt.ray = ray;
   trace_ctxt.payload = payload;
@@ -81,15 +82,16 @@ void trace(const Traversable* trav, const Ray& ray, f32 tmin, f32 tmax, u32 ich,
       trace_ctxt.hit = hit;
       trace_ctxt.itri = i;
       // Successful hit an triangle within t-range.
-      thread_ctxt.stage = L_SHADER_STAGE_MISS;
+      thread_ctxt.stage = L_SHADER_STAGE_CLOSEST_HIT;
       pass_ctxt.pipe->shaders[pass_ctxt.pipe->ch_offset + ich]();
-      thread_ctxt.stage = L_SHADER_STAGE_RAY_GENERATION;
+      thread_ctxt.stage = cur_stage;
+      return;
     }
   }
   // Failed to hit any triangle.
   thread_ctxt.stage = L_SHADER_STAGE_MISS;
   pass_ctxt.pipe->shaders[pass_ctxt.pipe->ms_offset + ims]();
-  thread_ctxt.stage = L_SHADER_STAGE_RAY_GENERATION;
+  thread_ctxt.stage = cur_stage;
 }
 
 const void* get_sbt_data() {
@@ -125,6 +127,7 @@ void launch(const Pipeline& pipe, const ShaderBindingTable& sbt, LaunchDim launc
   pass_ctxt.pipe = &pipe;
   pass_ctxt.sbt = &sbt;
   pass_ctxt.launch_size = launch_size;
+  thread_ctxt.stage = L_SHADER_STAGE_RAY_GENERATION;
   for (auto k = 0; k < launch_size.z; ++k) {
     thread_ctxt.launch_id.z = k;
     for (auto j = 0; j < launch_size.y; ++j) {
@@ -201,7 +204,7 @@ int main(int argc, const char** argv) {
   ShaderBindingTable sbt;
   sbt.datas = sbt_datas;
 
-  launch(pipe, sbt, { FRAMEBUF_EDGE, FRAMEBUF_EDGE });
+  launch(pipe, sbt, { FRAMEBUF_EDGE, FRAMEBUF_EDGE, 1 });
 
   for (auto j = 0; j < FRAMEBUF_EDGE; ++j) {
     for (auto i = 0; i < FRAMEBUF_EDGE; ++i) {
