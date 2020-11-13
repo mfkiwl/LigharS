@@ -3,8 +3,13 @@
 #include <cassert>
 #include <algorithm>
 
+#ifndef M_PI
+#define M_PI   3.14159265358979323846264338327950288
+#endif
+
 namespace gpumagi {
 
+using u8 = uint8_t;
 using u32 = unsigned;
 using f32 = float;
 
@@ -30,6 +35,9 @@ inline Vector operator-(const Vector& a, const Vector& b) {
 }
 inline Vector operator*(const Vector& a, f32 b) {
   return { a.x * b, a.y * b, a.z * b };
+}
+inline Vector operator*(f32 a, const Vector& b) {
+  return { a * b.x, a * b.y, a * b.z };
 }
 inline Vector operator/(const Vector& a, f32 b) {
   return { a.x / b, a.y / b, a.z / b };
@@ -202,6 +210,8 @@ struct Transform {
     return Transform { r1_, r2_, r3_ };
   }
 };
+constexpr float deg2rad(float deg) { return deg / 180.0 * M_PI; }
+constexpr float rad2deg(float deg) { return deg / M_PI * 180.0; }
 
 
 
@@ -221,9 +231,6 @@ Barycentric make_bary(const Point& p_, const Triangle& tri) {
   f32 denom = d00 * d11 - d01 * d01;
   f32 u = (d11 * d20 - d01 * d21) / denom;
   f32 v = (d00 * d21 - d01 * d20) / denom;
-
-  u = std::min(1.0f, std::max(0.0f, u));
-  v = std::min(1.0f, std::max(0.0f, v));
 
   return Barycentric { u, v };
 }

@@ -149,6 +149,40 @@ inline bool               is_front_face_hit() { return trace_ctxt.hit.kind == L_
 inline bool               is_back_face_hit() { return trace_ctxt.hit.kind == L_HIT_KIND_BACK; }
 
 
+struct FilmCoordinates {
+  f32 x, y;
+};
+FilmCoordinates get_film_coord_n1p1() {
+  const LaunchDim& launch_size = get_launch_size();
+  const LaunchDim& launch_id = get_launch_id();
+  auto x = ((f32)(launch_id.x) * 2 + 1 - launch_size.x) / launch_size.x;
+  auto y = ((f32)(launch_id.y) * 2 + 1 - launch_size.y) / launch_size.y;
+  return { x, y };
+}
+struct CameraCoordinates {
+  Point o;
+  Vector right;
+  Vector up;
+};
+CameraCoordinates make_cam_coord(const Transform& trans) {
+  auto o = trans.apply_pt(make_pt(0, 0, 0));
+  auto right = trans.apply_vec(make_vec(1, 0, 0));
+  auto up = trans.apply_vec(make_vec(0, 1, 0));
+  return { o, right, up };
+}
+// Get a orthogonally projected ray for this raygen shader invocation.
+Ray gen_ortho_ray(
+  const Transform& trans
+) {
+  auto cam_coord = make_cam_coord(trans);
+  // Let the rays shoot into the screen.
+  Vector front = normalize(cross(cam_coord.up, cam_coord.right));
+  FilmCoordinates uv = get_film_coord_n1p1();
+  cam_coord.o = cam_coord.o + (uv.x * cam_coord.right + uv.y * cam_coord.up);
+  return Ray { cam_coord.o, front };
+}
+
+
 
 //
 // Host-side procedures.
