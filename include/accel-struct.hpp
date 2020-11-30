@@ -1,43 +1,32 @@
+#pragma once
 #include <cstdint>
 #include <vector>
-#include "geom.hpp"
+#include <geom.hpp>
+#include <bvh.hpp>
 
 namespace gpumagi {
 
-using u32 = unsigned;
-using f32 = float;
-/*
-struct BlasBuildConfig {
-  u32 ntri;
-  const u32* idxs;
-  u32 nvert;
-  const f32* verts;
+enum TraversablePreference {
+  L_TRAVERSABLE_PREFERENCE_DEFAULT = 0,
+  L_TRAVERSABLE_PREFERENCE_FAST_BUILD = 1,
+  L_TRAVERSABLE_PREFERENCE_FAST_TRAVERSAL = 2,
 };
-struct BlasMemoryRequirement {
-  u32 scratch_size;
-  u32 blas_size;
-  u32 compacted_size;
-};
-
-struct PlainBlas {
-  Triangle* tris;
-};
-BlasMemoryRequirement get_plain_blas_mem_req(const BlasBuildConfig& build_cfg) {
-  return BlasMemoryRequirement {
-    0,
-    build_cfg.ntri * sizeof(Triangle),
-    build_cfg.ntri * sizeof(Triangle),
-  };
-}
-PlainBlas build_plain_blas(const BlasBuildConfig* tris, Triangle* blas_mem) {
-  throw 0;
-}*/
-
 struct Traversable {
-  std::vector<Triangle> tris;
+  Bvh bvh;
 };
-Traversable make_trav(const std::vector<Triangle>& tris) {
-  return Traversable { tris };
+
+Traversable create_trav(const TraversablePreference& pref) {
+  u32 vol_ndiv = (pref & L_TRAVERSABLE_PREFERENCE_FAST_TRAVERSAL) ? 16 : 4;
+  Dim vol_size { vol_ndiv, vol_ndiv, vol_ndiv };
+  Bvh bvh = create_bvh(vol_size);
+  return Traversable { bvh };
+}
+
+void build_trav(
+  Traversable& trav,
+  const std::vector<Triangle>& tris
+) {
+  build_bvh(trav.bvh, tris);
 }
 
 } // namespace gpumagi

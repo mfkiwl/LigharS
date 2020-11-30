@@ -2,11 +2,9 @@
 #include <vector>
 #include <geom.hpp>
 #include <accel-struct.hpp>
+#include <bvh.hpp>
 
 namespace gpumagi {
-
-using u32 = unsigned;
-using f32 = float;
 
 enum ShaderStage {
   L_SHADER_STAGE_RAY_GENERATION,
@@ -61,19 +59,15 @@ void bind_sbt(ShaderBindingTable& sbt, ShaderStage stage, u32 i, const void* dat
 
 
 
-struct LaunchDim {
-  u32 x, y, z;
-};
-
 struct TraversalPassContext {
   // Set during draw calls.
   const Pipeline* pipe;
   const ShaderBindingTable* sbt;
-  LaunchDim launch_size;
+  Dim launch_size;
 };
 struct TraversalThreadContext {
   // Set by scheduler during thread launch.
-  LaunchDim launch_id;
+  Dim launch_id;
   ShaderStage stage; // Current execution stage.
 };
 struct TraversalTraceContext {
@@ -107,16 +101,23 @@ void trace(const Traversable* trav, const Ray& ray, f32 tmin, f32 tmax, u32 ich,
   trace_ctxt.ray = ray;
   trace_ctxt.payload = payload;
   trace_ctxt.ray = ray;
-  for (size_t i = 0; i < trav->tris.size(); ++i) {
-    TriangleHit hit;
-    if (ray_cast_tri(ray, trav->tris[i], hit) && tmin <= hit.t && hit.t < tmax) {
-      trace_ctxt.hit = hit;
-      trace_ctxt.itri = i;
-      // Successful hit an triangle within t-range.
-      thread_ctxt.stage = L_SHADER_STAGE_CLOSEST_HIT;
-      pass_ctxt.pipe->shaders[pass_ctxt.pipe->ch_offset + ich]();
-      thread_ctxt.stage = cur_stage;
-      return;
+  for (size_t i = 0; i < trav->bvh.vols.size(); ++i) {
+    const Volumn& vol = trav->bvh.vols[i];
+    AabbHit aabb_hit;
+    if (ray_cast_aabb(ray, vol.aabb, aabb_hit)) {
+      // Hit a AABB. Check the primitives inside.
+      TriangleHit hit;
+      for (size_t j = 0; j < vol.tris.size(); ++j) {
+        if (ray_cast_tri(ray, vol.tris[j], hit) && tmin <= hit.t && hit.t < tmax) {
+          trace_ctxt.hit = hit;
+          trace_ctxt.itri = i;
+          // Successful hit an triangle within t-range.
+          thread_ctxt.stage = L_SHADER_STAGE_CLOSEST_HIT;
+          pass_ctxt.pipe->shaders[pass_ctxt.pipe->ch_offset + ich]();
+          thread_ctxt.stage = cur_stage;
+          return;
+        }
+      }
     }
   }
   // Failed to hit any triangle.
@@ -143,8 +144,8 @@ inline HitKind            get_hit_kind() { return trace_ctxt.hit.kind; }
 inline const Barycentric& get_bary() { return trace_ctxt.hit.bary; }
 inline u32                get_itri() { return trace_ctxt.itri; }
 inline void*              get_payload() { return trace_ctxt.payload; }
-inline const LaunchDim&   get_launch_size() { return pass_ctxt.launch_size; }
-inline const LaunchDim&   get_launch_id() { return thread_ctxt.launch_id; }
+inline const Dim&         get_launch_size() { return pass_ctxt.launch_size; }
+inline const Dim&         get_launch_id() { return thread_ctxt.launch_id; }
 inline bool               is_front_face_hit() { return trace_ctxt.hit.kind == L_HIT_KIND_FRONT; }
 inline bool               is_back_face_hit() { return trace_ctxt.hit.kind == L_HIT_KIND_BACK; }
 
@@ -153,8 +154,8 @@ struct FilmCoordinates {
   f32 x, y;
 };
 FilmCoordinates get_film_coord_n1p1() {
-  const LaunchDim& launch_size = get_launch_size();
-  const LaunchDim& launch_id = get_launch_id();
+  const Dim& launch_size = get_launch_size();
+  const Dim& launch_id = get_launch_id();
   auto x = ((f32)(launch_id.x) * 2 + 1 - launch_size.x) / launch_size.x;
   auto y = ((f32)(launch_id.y) * 2 + 1 - launch_size.y) / launch_size.y;
   return { x, y };
@@ -187,7 +188,7 @@ Ray gen_ortho_ray(
 //
 // Host-side procedures.
 
-void launch(const Pipeline& pipe, const ShaderBindingTable& sbt, LaunchDim launch_size) {
+void launch(const Pipeline& pipe, const ShaderBindingTable& sbt, Dim launch_size) {
   pass_ctxt.pipe = &pipe;
   pass_ctxt.sbt = &sbt;
   pass_ctxt.launch_size = launch_size;

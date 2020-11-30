@@ -75,8 +75,8 @@ void raygen() {
   Color color;
   trace(data.trav, ray, 1e-5, 1e5, 0, 0, &color);
 
-  const LaunchDim& launch_size = get_launch_size();
-  const LaunchDim& launch_id = get_launch_id();
+  const Dim& launch_size = get_launch_size();
+  const Dim& launch_id = get_launch_id();
   (*data.framebuf)[launch_id.x + launch_id.y * launch_size.x] = pack_unorm4_rgba(color);
 }
 void closest_hit() {
@@ -133,8 +133,10 @@ Traversable l_create_cube_cfg(const Transform& world2obj) {
     v2 = world2obj.apply_pt(v2);
     tris.push_back(make_tri(v0, v1, v2));
   }
-  
-  return make_trav(tris);
+
+  Traversable trav = create_trav(L_TRAVERSABLE_PREFERENCE_FAST_BUILD);
+  build_trav(trav, tris);
+  return trav;
 }
 
 

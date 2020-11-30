@@ -13,6 +13,14 @@ using u8 = uint8_t;
 using u32 = unsigned;
 using f32 = float;
 
+
+
+struct Dim {
+  u32 x, y, z;
+};
+
+
+
 struct Point {
   f32 x, y, z;
 };
@@ -70,6 +78,20 @@ inline f32 magnitude(const Vector& a) {
 inline Vector normalize(const Vector& a) {
   return a / magnitude(a);
 }
+inline Point min(const Point& a, const Point& b) {
+  return Point {
+    std::fmin(a.x, b.x),
+    std::fmin(a.y, b.y),
+    std::fmin(a.z, b.z),
+  };
+}
+inline Point max(const Point& a, const Point& b) {
+  return Point {
+    std::fmax(a.x, b.x),
+    std::fmax(a.y, b.y),
+    std::fmax(a.z, b.z),
+  };
+}
 
 
 
@@ -92,6 +114,53 @@ inline Triangle make_tri(const Point& a, const Point& b, const Point& c) {
   Vector u = b - a;
   Vector v = c - a;
   return Triangle { a, u, v };
+}
+
+
+
+struct Aabb {
+  Point min_pt;
+  Point max_pt;
+};
+
+// for given triangle, it will return the Aabb
+inline Aabb make_aabb(const Triangle& t) {
+  // t.o is point a
+  Point b = t.o + t.u; // add point and vector to get the other points of the triangle
+  Point c = t.o + t.v;
+  Point max_pt {
+    std::fmax(std::fmax(t.o.x, b.x), c.x),
+    std::fmax(std::fmax(t.o.y, b.y), c.y),
+    std::fmax(std::fmax(t.o.z, b.z), c.z),
+  };
+  Point min_pt {
+    std::fmin(std::fmin(t.o.x, b.x), c.x),
+    std::fmin(std::fmin(t.o.y, b.y), c.y),
+    std::fmin(std::fmin(t.o.z, b.z), c.z),
+  };
+  return Aabb { max_pt, min_pt };
+}
+// true if 2 AABBs are intersecting
+inline bool intersect(const Aabb& a, const Aabb& b) {
+  return
+    (b.min_pt.x <= a.min_pt.x && a.min_pt.x <= b.max_pt.x) ||
+    (b.min_pt.x <= a.max_pt.x && a.max_pt.x <= b.max_pt.x) ||
+    (a.min_pt.x <= b.min_pt.x && b.min_pt.x <= a.max_pt.x) ||
+    (a.min_pt.x <= b.max_pt.x && b.max_pt.x <= a.max_pt.x) ||
+    (b.min_pt.y <= a.min_pt.y && a.min_pt.y <= b.max_pt.y) ||
+    (b.min_pt.y <= a.max_pt.y && a.max_pt.y <= b.max_pt.y) ||
+    (a.min_pt.y <= b.min_pt.y && b.min_pt.y <= a.max_pt.y) ||
+    (a.min_pt.y <= b.max_pt.y && b.max_pt.y <= a.max_pt.y) ||
+    (b.min_pt.z <= a.min_pt.z && a.min_pt.z <= b.max_pt.z) ||
+    (b.min_pt.z <= a.max_pt.z && a.max_pt.z <= b.max_pt.z) ||
+    (a.min_pt.z <= b.min_pt.z && b.min_pt.z <= a.max_pt.z) ||
+    (a.min_pt.z <= b.max_pt.z && b.max_pt.z <= a.max_pt.z);
+}
+inline Aabb extend(const Aabb& a, const Aabb& b) {
+  return Aabb {
+    min(a.min_pt, b.min_pt),
+    max(a.max_pt, b.max_pt),
+  };
 }
 
 
@@ -271,6 +340,33 @@ bool ray_cast_tri(const Ray& ray, const Triangle& tri, TriangleHit& hit) {
   hit.kind = kind;
   hit.t = t;
   return true;
+}
+struct AabbHit {
+  HitKind kind;
+  f32 t;
+};
+bool ray_cast_aabb(const Ray& ray, const Aabb& aabb, AabbHit& hit) {
+  f32 t1 = (aabb.min_pt.x - ray.o.x) / ray.v.x;
+  f32 t2 = (aabb.max_pt.x - ray.o.x) / ray.v.x;
+  f32 t4 = (aabb.max_pt.y - ray.o.y) / ray.v.y;
+  f32 t3 = (aabb.min_pt.y - ray.o.y) / ray.v.y;
+  f32 t5 = (aabb.min_pt.z - ray.o.z) / ray.v.z;
+  f32 t6 = (aabb.max_pt.z - ray.o.z) / ray.v.z;
+
+  f32 tmin = std::fmax(std::fmax(std::fmin(t1, t2), std::fmin(t3, t4)), std::fmin(t5, t6));
+  f32 tmax = std::fmin(std::fmin(std::fmax(t1, t2), std::fmax(t3, t4)), std::fmax(t5, t6));
+
+  if (tmax < 0 || tmin > tmax) {
+    return false;
+  } else if (tmin < 0) {
+    hit.t = tmax;
+    hit.kind = L_HIT_KIND_BACK;
+    return true;
+  } else {
+    hit.t = tmin;
+    hit.kind = L_HIT_KIND_FRONT;
+    return true;
+  }
 }
 
 
