@@ -16,7 +16,7 @@ endmodule
 
 module InstructionDecoder(
   input [31:0] instr,
-  output alu_op,
+  output reg [4:0] alu_op,
   // Report that the decoder is ready to consume another instruction.
   output reg ready,
   // The instruction used a unsupported opcode.
@@ -44,25 +44,18 @@ module InstructionDecoder(
 
   // -- Behaviors.
   always @(*) begin
-    if (opcode[1:0] == 2'b11) begin
-      case (opcode[6:2])
-        5'h00: // Memory read access.
-        5'h03: // Fences.
-        5'h04: // Immediate-value operations.
-        5'h05: // auipc
-        5'h08: // Memory write access.
-        5'h0c: // ALU operations.
-        5'h0d: // lui
-        5'h18: // Branch instructions.
-        5'h19: // jalr
-        5'h1b: // jal
-      endcase
-
-      unimpl_opcode <= unimpl_opcode;
-    end
-    else begin
-      unimpl_opcode <= 1;
-    end
+    case (opcode[6:2])
+      5'h00: // Memory read access.
+      5'h03: // Fences.
+      5'h04: // Immediate-value operations.
+      5'h05: // auipc
+      5'h08: // Memory write access.
+      5'h0c: // ALU operations.
+      5'h0d: // lui
+      5'h18: // Branch instructions.
+      5'h19: // jalr
+      5'h1b: // jal
+    endcase
   end
 
 endmodule
