@@ -19,16 +19,14 @@
   `assert(src_data1, zsrc_data1); \
   `assert(src_data2, zsrc_data2);
 `define test_read_write(xwrite_en, xdst_addr, xdst_data, xsrc_addr1, xsrc_addr2, zsrc_data1, zsrc_data2) \
-  #10; \
   write_en = xwrite_en; \
   dst_addr = xdst_addr; \
   dst_data = xdst_data; \
   src_addr1 = xsrc_addr1; \
   src_addr2 = xsrc_addr2; \
-  #5 clk = ~clk; \
+  #5 clk = ~clk;  #5 clk = ~clk; \
   `assert(src_data1, zsrc_data1); \
-  `assert(src_data2, zsrc_data2); \
-  #5 clk = ~clk;
+  `assert(src_data2, zsrc_data2);
 
 module tb_RegisterFile;
   reg clk, reset;
@@ -55,7 +53,7 @@ module tb_RegisterFile;
   );
 
   initial begin
-    clk = 0;
+    clk = 1;
     reset = 1;
     #5 clk = ~clk; #5 clk = ~clk;
     #5 clk = ~clk; #5 clk = ~clk;
