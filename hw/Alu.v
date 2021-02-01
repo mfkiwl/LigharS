@@ -18,7 +18,7 @@ module Alu(
   output neg,
 
   // Result of the last ALU operation.
-  output reg [31:0] res,
+  output reg [31:0] res
 );
 
   // -- Control variables.
@@ -27,30 +27,34 @@ module Alu(
 
 
   // -- Behaviors.
-  assign zero = res == 32'b0;
-  assign neg = res[31] == 1;
+  assign zero = res == 32'b0 ? 1 : 0;
+  assign neg = res[31] == 1 ? 1 : 0;
   assign shift_amount = operand1[4:0]; // TODO: Check this.
 
   always @(posedge clk) begin
     if (en) begin
       case (op)
       // Integral arithmatics.
-      3'b000: res = operand0 + operand1;
-      3'b001: res = operand0 - operand1;
-      // 1-bit shifter
-      3'b010: res = operand0 << shift_amount; // Left-shift.
-      3'b011: res = operand0 >> shift_amount; // Right-shift.
+      4'b0000: res = operand0 + operand1;
+      4'b0001: res = operand0 - operand1;
+      4'b0010: res = operand0 * operand1; // Left-shift.
+      4'b0011: res = operand0 / operand1; // Right-shift.
       // Pure bit-wise logic functions.
-      3'b100: res = operand0 not operand1;
-      3'b101: res = operand0 and operand1;
-      3'b110: res = operand0 or  operand1;
-      3'b111: res = operand0 xor operand1;
+      4'b1000: res = !operand0;
+      4'b1001: res = operand0 & operand1;
+      4'b1010: res = operand0 | operand1;
+      4'b1011: res = operand0 ^ operand1;
+      // Bit shifter
+      4'b1100: res = operand0 << shift_amount; // Left-shift logic.
+      4'b1101: res = operand0 >> shift_amount; // Right-shift logic.
+      //4'b1110: res = signed'(operand0) <<< shift_amount; // Left-shift arithmetic. The same as logical left-shift.
+      4'b1111: res = $signed(operand0) >>> shift_amount; // Right-shift arithmetic.
 
-      default: res = X;
+      default: res = 32'bX;
       endcase
     end
     else begin
-      res = 0;
+      res = 32'bX;
     end
   end
 
