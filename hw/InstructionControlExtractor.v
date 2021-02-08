@@ -18,8 +18,8 @@ module InstructionControlExtractor(
   output reg [2:0] alu_b_src
 );
 
-  assign rs1_addr = instr[24:20];
-  assign rs2_addr = instr[19:15];
+  assign rs1_addr = instr[19:15];
+  assign rs2_addr = instr[24:20];
   assign rd_addr = instr[11:7];
 
   localparam ALU_SRC_ZERO      = 3'b000;
