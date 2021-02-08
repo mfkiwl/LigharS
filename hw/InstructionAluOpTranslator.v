@@ -32,6 +32,17 @@ module InstructionAluOpTranslator(
           3'b110: alu_op = 4'b1010;
           3'b111: alu_op = 4'b1001;
         endcase
+      // ## Branch instructions
+      5'h18: begin
+        case (funct3)
+          3'b000: alu_op = 4'b0001; // ==
+          3'b001: alu_op = 4'b0001; // !=
+          3'b100: alu_op = 4'b1101; // <
+          3'b101: alu_op = 4'b1101; // >=
+          3'b110: alu_op = 4'b1100; // <  (unsigned)
+          3'b111: alu_op = 4'b1100; // >= (unsigned)
+        endcase
+      end
       default: alu_op <= 4'b0000; // addi
     endcase
   end

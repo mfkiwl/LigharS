@@ -27,18 +27,21 @@ module Riscv(
 );
 
 wire [31:0] next_pc;
-wire [2:0] alu_a_src, alu_b_src;
+wire [2:0] alu_a_src, alu_b_src, branch_base_src, branch_offset_src;
 wire [3:0] alu_op;
+wire [1:0] branch_op;
 wire [4:0] rs1_addr, rs2_addr, rd_addr;
 wire [31:0] rs1_data, rs2_data;
-wire [31:0] a_data, b_data;
+wire [31:0] a_data, b_data, branch_base_data, branch_offset_data;
 wire [31:0] alu_res;
-wire should_write_reg, should_branch, should_jump;
+wire should_write_reg;
 wire [31:0] reg_write_data;
-
 
 assign data_addr = alu_res;
 assign mem_write_data = rs2_data;
+
+wire [31:0] branch_addr = branch_base_data + branch_offset_data;
+wire alu_res_is_zero = alu_res == 0 ? 1 : 0;
 
 
 // Components.
@@ -56,8 +59,6 @@ InstructionControlExtractor instr_ctrl_extract(`COMB_ONLY_MODULE
   .should_read_mem(should_read_mem),
   .should_write_mem(should_write_mem),
   .should_write_reg(should_write_reg),
-  .should_branch(should_branch),
-  .should_jump(should_jump),
   .rs1_addr(rs1_addr),
   .rs2_addr(rs2_addr),
   .rd_addr(rd_addr),
@@ -69,6 +70,14 @@ InstructionAluOpTranslator instr_alu_op_trans(`COMB_ONLY_MODULE
   .instr(instr),
   // out
   .alu_op(alu_op)
+);
+InstructionBranchSelTranslator instr_branch_sel_trans(`COMB_ONLY_MODULE
+  // in
+  .instr(instr),
+  // out
+  .branch_op(branch_op),
+  .branch_base_src(branch_base_src),
+  .branch_offset_src(branch_offset_src)
 );
 RegisterFile reg_file(`MEM_LIKE_MODULE
   // in
@@ -99,6 +108,24 @@ AluInputMux alu_b_mux(`COMB_ONLY_MODULE
   // out
   .data(b_data)
 );
+AluInputMux branch_base_mux(`COMB_ONLY_MODULE
+  // in
+  .src(branch_base_src),
+  .instr_addr(instr_addr),
+  .instr(instr),
+  .rs_data(rs1_data),
+  // out
+  .data(branch_base_data)
+);
+AluInputMux branch_offset_mux(`COMB_ONLY_MODULE
+  // in
+  .src(branch_offset_src),
+  .instr_addr(instr_addr),
+  .instr(instr),
+  .rs_data(rs2_data),
+  // out
+  .data(branch_offset_data)
+);
 Alu alu(`COMB_ONLY_MODULE
   // in
   .alu_op(alu_op),
@@ -107,12 +134,12 @@ Alu alu(`COMB_ONLY_MODULE
   // out
   .alu_res(alu_res)
 );
-BranchMux branch_mux(`COMB_ONLY_MODULE
+BranchUnit branch_unit(`COMB_ONLY_MODULE
   // in
-  .should_branch(should_branch),
-  .should_jump(should_jump),
-  .instr(instr),
+  .branch_op(branch_op),
+  .branch_addr(branch_addr),
   .instr_addr(instr_addr),
+  .alu_res_is_zero(alu_res_is_zero),
   // out
   .next_pc(next_pc)
 );

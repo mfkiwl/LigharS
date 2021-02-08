@@ -42,31 +42,32 @@ module SignedArithShiftWorkaround(
 endmodule
 
 // ALU opcode table:
-// ___________________________________
-// |        |                        |
-// | ALU OP | Description            |
-// |--------|------------------------|
-// |   0000 | addition               |
-// |   0001 | subtranction           |
-// |--------|------------------------|
-// |   0100 | shift left             |
-// |   0110 | shift right unsigned   |
-// |   0111 | shift right signed     |
-// |--------|------------------------|
-// |   1001 | and                    |
-// |   1010 | or                     |
-// |   1011 | xor                    |
-// |--------|------------------------|
-// |   1100 | set-less-than unsigned |
-// |   1101 | set-less-than signed   |
-// |________|________________________|
+// ____________________________________
+// |         |                        |
+// | ALU OP  | Description            |
+// |---------|------------------------|
+// | 4'b0000 | addition               |
+// | 4'b0001 | subtranction           |
+// |---------|------------------------|
+// | 4'b0100 | shift left             |
+// | 4'b0110 | shift right unsigned   |
+// | 4'b0111 | shift right signed     |
+// |---------|------------------------|
+// | 4'b1001 | and                    |
+// | 4'b1010 | or                     |
+// | 4'b1011 | xor                    |
+// |---------|------------------------|
+// | 4'b1100 | set-less-than unsigned |
+// | 4'b1101 | set-less-than signed   |
+// |_________|________________________|
 //
 module Alu(
   input [3:0] alu_op,
   input [31:0] a_data,
   input [31:0] b_data,
 
-  output [31:0] alu_res
+  output [31:0] alu_res,
+  output zero
 );
 
   wire signed [31:0] signed_a_data = $signed(a_data);

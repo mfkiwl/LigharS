@@ -18,13 +18,8 @@ module ProgramCounter(
   always @(posedge clk, posedge reset) begin
     if (reset)
       pc <= 0;
-  end
-
-  always @(negedge clk) begin
-    if (!reset)
-      pc <= next_pc;
     else
-      pc <= pc;
+      pc <= next_pc;
   end
 
 endmodule
