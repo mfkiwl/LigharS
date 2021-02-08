@@ -48,13 +48,13 @@ module tb_Riscv();
 
   always #5 clk = ~clk;
 
+  integer instr_idx;
   always @(posedge clk) begin
     // Execute until the instruction memory is out of instructions.
-    if (uut.pc.pc >= 2 * 4)
+    if (!reset && uut.pc.pc >= instr_idx * 4)
       uut.pc.pc = 0;
   end
 
-  integer instr_idx;
   initial begin
     clk = 0;
     reset = 1; #10 reset = 0;
@@ -68,7 +68,6 @@ module tb_Riscv();
 
 
 `i(32'b00000000000100000000001010010011); // addi t0, x0, 1
-`i(32'b00000000001000101000001100010011); // addi t1, t0, 2
 `i(32'b00000000001000101000001100010011); // addi t1, t0, 2
 
 
