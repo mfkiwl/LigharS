@@ -25,27 +25,23 @@ module Alu(
   input [31:0] a_data,
   input [31:0] b_data,
 
-  output [31:0] alu_res,
+  output [31:0] alu_res
 );
 
-  always @(*) begin
-    case (alu_op) begin
-      4'b0000: alu_res <= a_data - b_data;
-      4'b0001: alu_res <= a_data + b_data;
+  assign alu_res =
+    alu_op == 4'b0000 ? a_data - b_data :
+    alu_op == 4'b0001 ? a_data + b_data :
 
-      4'b0100: alu_res <= a_data << b_data;
-      4'b0110: alu_res <= a_data >> b_data;
-      4'b0111: alu_res <= $signed(a_data) >>> $signed(b_data);
+    alu_op == 4'b0100 ? a_data << b_data :
+    alu_op == 4'b0110 ? a_data >> b_data :
+    alu_op == 4'b0111 ? $signed(a_data) >>> $signed(b_data) :
 
-      4'b1001: alu_res <= a_data & b_data;
-      4'b1010: alu_res <= a_data | b_data;
-      4'b1011: alu_res <= a_data ^ b_data;
+    alu_op == 4'b1001 ? a_data & b_data :
+    alu_op == 4'b1010 ? a_data | b_data :
+    alu_op == 4'b1011 ? a_data ^ b_data :
 
-      4'b1100: alu_res = a < b ? 1 : 0;
-      4'b1101: alu_res = $signed(a) < $signed(b) ? 1 : 0;
-
-      default: alu_res = 32{X};
-    end
-  end
+    alu_op == 4'b1100 ? a < b ? 1 : 0 :
+    alu_op == 4'b1101 ? $signed(a) < $signed(b) ? 1 : 0 :
+    {32'bX};
 
 endmodule

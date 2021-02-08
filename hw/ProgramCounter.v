@@ -8,7 +8,7 @@ module ProgramCounter(
 
   input [31:0] next_pc,
 
-  output [31:0] instr_addr,
+  output [31:0] instr_addr
 );
 
   reg [31:0] pc;

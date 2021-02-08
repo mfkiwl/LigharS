@@ -5,14 +5,9 @@ module RegisterWriteMux(
   input [31:0] alu_res,
   input [31:0] mem_read_data,
 
-  input [31:0] reg_write_data,
-) begin
+  output [31:0] reg_write_data
+);
 
-  always @(*) begin
-    if (should_read_mem)
-      reg_write_data <= mem_read_data;
-    else
-      reg_write_data <= alu_res;
-  end
+  assign reg_write_data = should_read_mem ? mem_read_data : alu_res;
 
 endmodule
