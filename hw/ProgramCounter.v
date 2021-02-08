@@ -15,13 +15,16 @@ module ProgramCounter(
 
   assign instr_addr = pc;
 
-  always @(posedge reset) begin
-    pc <= 0;
+  always @(posedge clk, posedge reset) begin
+    if (reset)
+      pc <= 0;
   end
 
   always @(negedge clk) begin
     if (!reset)
       pc <= next_pc;
+    else
+      pc <= pc;
   end
 
 endmodule
