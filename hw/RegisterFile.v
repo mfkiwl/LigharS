@@ -1,50 +1,41 @@
 `timescale 1ns/1ps
 
 module RegisterFile(
-  input clk, reset,
-  // Write access.
-  input write_en,
-  input [4:0] dst_addr,
-  input [31:0] dst_data,
-  // Read access.
-  input [4:0] src_addr1,
-  input [4:0] src_addr2,
-  output [31:0] src_data1,
-  output [31:0] src_data2
+  input clk,
+  input reset,
+
+  input [4:0] read_addr1,
+  input [4:0] read_addr2,
+  input should_write,
+  input [31:0] write_data,
+
+  output reg [31:0] read_data1,
+  output reg [31:0] read_data2,
 );
-  // -- Storage.
-  reg [31:0] reg_fields [31:0];
 
+  reg [31:0] inner [31:0];
 
+  assign read_data1 = inner[read_addr1];
+  assign read_data2 = inner[read_addr2];
 
-  // -- Control variables.
-  integer i;
-  wire write_to_zero;
-
-
-
-  // -- Behaviors.
+  
   // All write access are done on negative edge.
   assign write_to_zero = dst_addr == 32'b0;
 
-  // Hardwired output.
-  assign src_data1 = reg_fields[src_addr1];
-  assign src_data2 = reg_fields[src_addr2];
-
-  // Reset and initialize all register fields.
-  always @(negedge clk) begin
+  integer i;
+  always @(posedge clk, posedge reset) begin
     if (reset) begin
-      for (i = 0; i < 32; i = i + 1)
-        reg_fields[i] <= 32'b0;
+      for (i = 0; i < 32; i += 1) begin
+        inner[i] = 0;
+      end
     end
   end
 
-  // If the reset signal is not set and the destination address is not zero,
-  // write the data to the specified register field.
   always @(negedge clk) begin
-    if (!reset & write_en & !write_to_zero) begin
-      reg_fields[dst_addr] <= dst_data;
-    end
+    if (should_write & !write_to_zero)
+      inner[addr] <= write_data;
+    else
+      inner[addr] <= inner[addr];
   end
 
 endmodule

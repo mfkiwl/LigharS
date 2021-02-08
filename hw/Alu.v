@@ -1,53 +1,50 @@
 `timescale 1ns/1ps
 
+// ALU opcode table:
+// ___________________________________
+// |        |                        |
+// | ALU OP | Description            |
+// |--------|------------------------|
+// |   0000 | addition               |
+// |   0001 | subtranction           |
+// |--------|------------------------|
+// |   0100 | shift left             |
+// |   0110 | shift right unsigned   |
+// |   0111 | shift right signed     |
+// |--------|------------------------|
+// |   1001 | and                    |
+// |   1010 | or                     |
+// |   1011 | xor                    |
+// |--------|------------------------|
+// |   1100 | set-less-than unsigned |
+// |   1101 | set-less-than signed   |
+// |________|________________________|
+//
 module Alu(
-  // Issue a new operation and terminate any existing operation.
-  input en,
-  // Clock signal.
-  input clk,
-  // ALU operation.
-  input [3:0] op,
-  // Left arithmatic operand in 32-bit integer number.
-  input [31:0] operand0,
-  // Right arithmatic operand in 32-bit integer number.
-  input [31:0] operand1,
+  input [3:0] alu_op,
+  input [31:0] a_data,
+  input [31:0] b_data,
 
-  // Result of the last operation is zero.
-  output zero,
-  // Last integral operation gives an negative result.
-  output neg,
-
-  // Result of the last ALU operation.
-  output reg [31:0] res
+  output [31:0] alu_res,
 );
 
-  // -- Control variables.
-  wire [4:0] shift_amount;
+  always @(*) begin
+    case (alu_op) begin
+      4'b0000: alu_res <= a_data - b_data;
+      4'b0001: alu_res <= a_data + b_data;
 
-  // -- Behaviors.
-  assign zero = res == 32'b0 ? 1 : 0;
-  assign neg = res[31] == 1 ? 1 : 0;
-  assign shift_amount = operand1[4:0]; // TODO: Check this.
+      4'b0100: alu_res <= a_data << b_data;
+      4'b0110: alu_res <= a_data >> b_data;
+      4'b0111: alu_res <= $signed(a_data) >>> $signed(b_data);
 
-  always @(posedge clk) begin
-    if (en) begin
-      case (op)
-      3'b0000: res = operand0 + operand1;
-      3'b1000: res = operand0 - operand1;
-      3'b0001: res = operand0 << shift_amount;
-      3'b0010: res = $signed(operand0) < $signed(operand1) ? 1 : 0;
-      3'b0011: res = operand0 < operand1 ? 1 : 0;
-      3'b0100: res = operand0 ^ operand1;
-      3'b0101: res = operand0 >> shift_amount;
-      3'b1101: res = $signed(operand0) >>> shift_amount;
-      3'b0110: res = operand0 | operand1;
-      3'b0111: res = operand0 & operand1;
+      4'b1001: alu_res <= a_data & b_data;
+      4'b1010: alu_res <= a_data | b_data;
+      4'b1011: alu_res <= a_data ^ b_data;
 
-      default: res = 32'bX;
-      endcase
-    end
-    else begin
-      res = 32'bX;
+      4'b1100: alu_res = a < b ? 1 : 0;
+      4'b1101: alu_res = $signed(a) < $signed(b) ? 1 : 0;
+
+      default: alu_res = 32{X};
     end
   end
 
