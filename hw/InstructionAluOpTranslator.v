@@ -5,7 +5,8 @@ module InstructionAluOpTranslator(
   output reg [3:0] alu_op
 );
 
-  wire [2:0] funct3; assign funct3 = instr[14:12];
+  wire [2:0] funct3 = instr[14:12];
+  wire [7:0] funct7 = instr[31:25];
 
   always @(*) begin
     case (instr[6:2])

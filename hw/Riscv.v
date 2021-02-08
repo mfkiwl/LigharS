@@ -14,8 +14,32 @@
 
 module Riscv(
   input clk,
-  input reset
+  input reset,
+
+  input [31:0] instr,
+  input [31:0] mem_read_data,
+
+  output [31:0] instr_addr,
+  output [31:0] data_addr,
+  output should_read_mem,
+  output should_write_mem,
+  output [31:0] mem_write_data
 );
+
+wire [31:0] next_pc;
+wire [2:0] alu_a_src, alu_b_src;
+wire [3:0] alu_op;
+wire [4:0] rs1_addr, rs2_addr, rd_addr;
+wire [31:0] rs1_data, rs2_data;
+wire [31:0] a_data, b_data;
+wire [31:0] alu_res;
+wire should_write_reg, should_branch, should_jump;
+wire [31:0] reg_write_data;
+
+
+assign data_addr = alu_res;
+assign mem_write_data = rs2_data;
+
 
 // Components.
 
@@ -23,13 +47,7 @@ ProgramCounter pc(`MEM_LIKE_MODULE
   // in
   .next_pc(next_pc),
   // out
-  .instr_addr(instr_addr),
-);
-InstructionMemory instr_mem(`MEM_LIKE_MODULE
-  // in
-  .addr(instr_addr),
-  // out
-  .instr(instr),
+  .instr_addr(instr_addr)
 );
 InstructionControlExtractor instr_ctrl_extract(`COMB_ONLY_MODULE
   // in
@@ -40,19 +58,17 @@ InstructionControlExtractor instr_ctrl_extract(`COMB_ONLY_MODULE
   .should_write_reg(should_write_reg),
   .should_branch(should_branch),
   .should_jump(should_jump),
-  .should_use_pc_as_a(should_use_pc_as_a),
-  .should_use_zero_as_a(should_use_zero_as_a),
-  .should_use_imm7_as_b(should_use_imm7_as_b),
-  .should_use_imm20_as_b(should_use_imm20_as_b),
-  .should_use_imm12_as_b(should_use_imm12_as_b),
-  .should_use_jump_offset_as_b(should_use_jump_offset_as_b),
-  .should_use_branch_offset_as_b(should_use_branch_offset_as_b),
+  .rs1_addr(rs1_addr),
+  .rs2_addr(rs2_addr),
+  .rd_addr(rd_addr),
+  .alu_a_src(alu_a_src),
+  .alu_b_src(alu_b_src)
 );
 InstructionAluOpTranslator instr_alu_op_trans(`COMB_ONLY_MODULE
   // in
   .instr(instr),
   // out
-  .alu_op(alu_op),
+  .alu_op(alu_op)
 );
 RegisterFile reg_file(`MEM_LIKE_MODULE
   // in
@@ -65,21 +81,23 @@ RegisterFile reg_file(`MEM_LIKE_MODULE
   .read_data1(rs1_data),
   .read_data2(rs2_data)
 );
-AluInputMux alu_in_mux(`COMB_ONLY_MODULE
+AluInputMux alu_a_mux(`COMB_ONLY_MODULE
   // in
+  .src(alu_a_src),
+  .instr_addr(instr_addr),
   .instr(instr),
-  .rs1_data(rs1_data),
-  .rs2_data(rs2_data),
-  .should_use_pc_as_a(should_use_pc_as_a),
-  .should_use_zero_as_a(should_use_zero_as_a),
-  .should_use_imm7_as_b(should_use_imm7_as_b),
-  .should_use_imm20_as_b(should_use_imm20_as_b),
-  .should_use_imm12_as_b(should_use_imm12_as_b),
-  .should_use_jump_offset_as_b(should_use_jump_offset_as_b),
-  .should_use_branch_offset_as_b(should_use_branch_offset_as_b),
+  .rs_data(rs1_data),
   // out
-  .a_data(a_data),
-  .b_data(b_data),
+  .data(a_data)
+);
+AluInputMux alu_b_mux(`COMB_ONLY_MODULE
+  // in
+  .src(alu_b_src),
+  .instr_addr(instr_addr),
+  .instr(instr),
+  .rs_data(rs2_data),
+  // out
+  .data(b_data)
 );
 Alu alu(`COMB_ONLY_MODULE
   // in
@@ -87,28 +105,16 @@ Alu alu(`COMB_ONLY_MODULE
   .a_data(a_data),
   .b_data(b_data),
   // out
-  .alu_res(alu_res),
+  .alu_res(alu_res)
 );
 BranchMux branch_mux(`COMB_ONLY_MODULE
   // in
   .should_branch(should_branch),
   .should_jump(should_jump),
-  .alu_res(alu_res),
+  .instr(instr),
   .instr_addr(instr_addr),
-  .branch_offset(branch_offset),
-  .jump_offset(jump_offset),
   // out
-  .next_pc(next_pc),
-);
-assign data_addr = alu_res;
-assign mem_write_data = rs2_data;
-DataMemory data_mem(`MEM_LIKE_MODULE
-  // in
-  .addr(data_addr),
-  .should_write(should_write_mem),
-  .write_data(mem_write_data),
-  // out
-  .read_data(mem_read_data)
+  .next_pc(next_pc)
 );
 RegisterWriteMux reg_write_mux(`COMB_ONLY_MODULE
   // in

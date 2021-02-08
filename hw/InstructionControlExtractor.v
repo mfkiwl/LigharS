@@ -3,15 +3,32 @@
 module InstructionControlExtractor(
   input [31:0] instr,
 
-  output should_read_mem,
-  output should_write_mem,
-  output should_write_reg,
-  output should_branch,
-  output should_jump,
+  output reg should_read_mem,
+  output reg should_write_mem,
+  output reg should_write_reg,
+  output reg should_branch,
+  output reg should_jump,
+
+
+  output [4:0] rs1_addr,
+  output [4:0] rs2_addr,
+  output [4:0] rd_addr,
 
   output reg [2:0] alu_a_src,
   output reg [2:0] alu_b_src
 );
+
+  assign rs1_addr = instr[24:20];
+  assign rs2_addr = instr[19:15];
+  assign rd_addr = instr[11:7];
+
+  localparam ALU_SRC_ZERO      = 3'b000;
+  localparam ALU_SRC_FOUR      = 3'b001;
+  localparam ALU_SRC_PC        = 3'b010;
+  localparam ALU_SRC_REG       = 3'b011;
+  localparam ALU_SRC_IMM12     = 3'b100;
+  localparam ALU_SRC_IMM20     = 3'b101;
+  localparam ALU_SRC_DONT_CARE = 3'bXXX;
 
   always @(*) begin
     case (instr[6:2])
@@ -24,8 +41,8 @@ module InstructionControlExtractor(
         should_write_reg <= 1;
         should_branch    <= 0;
         should_jump      <= 0;
-        alu_a_src        <= 3'b111;
-        alu_b_src        <= 3'b011;
+        alu_a_src        <= ALU_SRC_REG;
+        alu_b_src        <= ALU_SRC_IMM12;
       end
       // ## Fences
       5'h03: begin
@@ -35,8 +52,8 @@ module InstructionControlExtractor(
         should_write_reg <= 0;
         should_branch    <= 0;
         should_jump      <= 0;
-        alu_a_src        <= 3'b000;
-        alu_b_src        <= 3'b000;
+        alu_a_src        <= ALU_SRC_DONT_CARE;
+        alu_b_src        <= ALU_SRC_DONT_CARE;
       end
       // ## Immediate-value Arithmetic Operations
       5'h04: begin
@@ -45,8 +62,8 @@ module InstructionControlExtractor(
         should_write_reg <= 1;
         should_branch    <= 0;
         should_jump      <= 0;
-        alu_a_src        <= 3'b111;
-        alu_b_src        <= 3'b011;
+        alu_a_src        <= ALU_SRC_REG;
+        alu_b_src        <= ALU_SRC_IMM12;
       end
       // ## Add Upper Immediate to PC
       5'h05: begin
@@ -55,8 +72,8 @@ module InstructionControlExtractor(
         should_write_reg <= 1;
         should_branch    <= 0;
         should_jump      <= 0;
-        alu_a_src        <= 3'b001;
-        alu_b_src        <= 3'b100;
+        alu_a_src        <= ALU_SRC_PC;
+        alu_b_src        <= ALU_SRC_IMM20;
       end
       // ## Memory Write Access
       //
@@ -67,8 +84,8 @@ module InstructionControlExtractor(
         should_write_reg <= 0;
         should_branch    <= 0;
         should_jump      <= 0;
-        alu_a_src        <= 3'b111;
-        alu_b_src        <= 3'b011;
+        alu_a_src        <= ALU_SRC_REG;
+        alu_b_src        <= ALU_SRC_IMM12;
       end
       // ## Register-register Arithmetic Operations
       5'h0c: begin
@@ -77,8 +94,8 @@ module InstructionControlExtractor(
         should_write_reg <= 1;
         should_branch    <= 0;
         should_jump      <= 0;
-        alu_a_src        <= 3'b111;
-        alu_b_src        <= 3'b111;
+        alu_a_src        <= ALU_SRC_REG;
+        alu_b_src        <= ALU_SRC_REG;
       end
       // ## Load Upper Immediate
       5'h0d: begin
@@ -87,8 +104,8 @@ module InstructionControlExtractor(
         should_write_reg <= 1;
         should_branch    <= 0;
         should_jump      <= 0;
-        alu_a_src        <= 3'b000;
-        alu_b_src        <= 3'b100;
+        alu_a_src        <= ALU_SRC_ZERO;
+        alu_b_src        <= ALU_SRC_IMM20;
       end
       // ## Branch instructions
       5'h18: begin
@@ -97,8 +114,8 @@ module InstructionControlExtractor(
         should_write_reg <= 0;
         should_branch    <= 1;
         should_jump      <= 0;
-        alu_a_src        <= 3'b001;
-        alu_b_src        <= 3'b101;
+        alu_a_src        <= ALU_SRC_REG;
+        alu_b_src        <= ALU_SRC_REG;
       end
       // ## Jump and Link Register
       //
@@ -109,8 +126,8 @@ module InstructionControlExtractor(
         should_write_reg <= 1;
         should_branch    <= 0;
         should_jump      <= 1;
-        alu_a_src        <= 3'b001;
-        alu_b_src        <= 3'b011;
+        alu_a_src        <= ALU_SRC_PC;
+        alu_b_src        <= ALU_SRC_FOUR;
       end
       // ## Jump and Link
       //
@@ -121,8 +138,8 @@ module InstructionControlExtractor(
         should_write_reg <= 1;
         should_branch    <= 0;
         should_jump      <= 1;
-        alu_a_src        <= 3'b001;
-        alu_b_src        <= 3'b110;
+        alu_a_src        <= ALU_SRC_PC;
+        alu_b_src        <= ALU_SRC_FOUR;
       end
       default: begin
         should_read_mem  <= 0;
@@ -130,8 +147,8 @@ module InstructionControlExtractor(
         should_write_reg <= 0;
         should_branch    <= 0;
         should_jump      <= 0;
-        alu_a_src        <= 3'b000;
-        alu_b_src        <= 3'b000;
+        alu_a_src        <= ALU_SRC_DONT_CARE;
+        alu_b_src        <= ALU_SRC_DONT_CARE;
       end
     endcase
   end
