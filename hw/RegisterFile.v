@@ -20,7 +20,7 @@ module RegisterFile(
   assign read_data2 = inner[read_addr2];
 
   // All write access are done on negative edge.
-  wire write_to_zero = write_addr == 32'b0 ? 1 : 0;
+  wire write_to_zero = write_addr == 5'b0 ? 1 : 0;
 
   integer i;
   always @(posedge clk, posedge reset) begin
