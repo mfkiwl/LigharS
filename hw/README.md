@@ -33,20 +33,20 @@ ________________________________________________________________________
 | fsub.s    | - ( 1 * B ) + C | FPU Result | 0           | FPU Result  |
 | fmul.s    | + ( A * B ) + 0 | FPU Result | 0           | FPU Result  |
 | fdiv.s    | + ( A / B ) + 0 | FPU Result | 0           | FPU Result  |
-| fsgnj.s   | + ( 0 * 0 ) @ C | FPU Result | 0           | !(B ^ C)    |
-| fsgnjn.s  | + ( 0 * 0 ) @ C | FPU Result | 0           | B ^ C       |
-| fsgnjx.s  | + ( 0 * 0 ) @ C | FPU Result | 0           | B           |
+| fsgnj.s   | + ( 1 * 0 ) @ C | FPU Result | 0           | !(B ^ C)    |
+| fsgnjn.s  | + ( 1 * 0 ) @ C | FPU Result | 0           | B ^ C       |
+| fsgnjx.s  | + ( 1 * 0 ) @ C | FPU Result | 0           | B           |
 | fmin.s    | - ( 1 * B ) + C | C if flag  | neg         | FPU Result  |
 | fmax.s    | + ( 1 * B ) - C | C if flag  | neg         | FPU Result  |
 | fle.s     | - ( 1 * B ) + C | 1 if flag  | neg or zero | FPU Result  |
 | flt.s     | - ( 1 * B ) + C | 1 if flag  | neg         | FPU Result  |
 | feq.s     | - ( 1 * B ) + C | 1 if flag  | zero        | FPU Result  |
-| fcvt.w.s  | + ( 0 * 0 ) + C | FPU Result | 0           | FPU Result  |
-| fcvt.uw.s | + ( 0 * 0 ) + C | FPU Result | 0           | FPU Result  |
-| fcvt.s.w  | + ( 0 * 0 ) + C | FPU Result | 0           | FPU Result  |
-| fcvt.s.uw | + ( 0 * 0 ) + C | FPU Result | 0           | FPU Result  |
-| fmv.w.x   | + ( 0 * 0 ) + C | FPU Result | 0           | FPU Result  |
-| fmv.x.w   | + ( 0 * 0 ) + C | FPU Result | 0           | FPU Result  |
+| fcvt.w.s  | + ( 1 * 0 ) + C | FPU Result | 0           | FPU Result  |
+| fcvt.uw.s | + ( 1 * 0 ) + C | FPU Result | 0           | FPU Result  |
+| fcvt.s.w  | + ( 1 * 0 ) + C | FPU Result | 0           | FPU Result  |
+| fcvt.s.uw | + ( 1 * 0 ) + C | FPU Result | 0           | FPU Result  |
+| fmv.w.x   | + ( 1 * 0 ) + C | FPU Result | 0           | FPU Result  |
+| fmv.x.w   | + ( 1 * 0 ) + C | FPU Result | 0           | FPU Result  |
 | fmadd.s   | + ( A * B ) + C | FPU Result | 0           | FPU Result  |
 | fmsub.s   | + ( A * B ) - C | FPU Result | 0           | FPU Result  |
 | fnmadd.s  | - ( A * B ) + C | FPU Result | 0           | FPU Result  |
