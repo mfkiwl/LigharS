@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+// Variable-length non-negative integer divider.
 
 module Divider #(parameter WIDTH=4) (
   input clk,
@@ -22,12 +23,18 @@ module Divider #(parameter WIDTH=4) (
   assign quotient = quotient_;
   assign remainder = remainder_[WIDTH-1:0];
 
-  wire [$clog2(WIDTH):0] next_it_count = it_count + 1;
-  wire [WIDTH-1:0] next_quotient = {quotient[WIDTH-2:0], div_digit};
   wire [WIDTH:0] remainder_minus_divisor = remainder_ - divisor_;
-  wire [WIDTH:0] next_remainder = div_digit ?
+  wire [WIDTH:0] remainder_updated = div_digit ?
     {remainder_minus_divisor[WIDTH-1:0], quotient[WIDTH-1]} :
     {remainder, quotient[WIDTH-1]};
+
+  wire [$clog2(WIDTH):0] next_it_count  = it_count + 1;
+  wire [WIDTH-1:0]       next_quotient  = launch ?
+    {dividend[WIDTH-2:0], 1'b0} :
+    {quotient[WIDTH-2:0], div_digit};
+  wire [WIDTH:0]         next_remainder = launch ?
+    {{(WIDTH-1){1'b0}}, dividend[WIDTH-1]} :
+    remainder_updated;
 
   always @(posedge clk, posedge reset) begin
     if (reset) begin
@@ -53,8 +60,8 @@ module Divider #(parameter WIDTH=4) (
         div_by_zero <= 0;
         it_count <= 0;
         divisor_ <= divisor;
-        quotient_ <= {dividend[WIDTH-2:0], 1'b0};
-        remainder_ <= {{(WIDTH-1){1'b0}}, dividend[WIDTH-1]};
+        quotient_ <= next_quotient;
+        remainder_ <= next_remainder;
       end
     end else if (busy) begin
       if (next_it_count == WIDTH) begin
