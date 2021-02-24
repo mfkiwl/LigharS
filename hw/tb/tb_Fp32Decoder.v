@@ -12,7 +12,7 @@ module tb_Fp32Decoder ();
   wire sign;
   wire [7:0] exponent;
   wire [22:0] mantissa;
-  wire is_zero, is_denorm, is_norm, is_inf, is_nan;
+  wire is_zero, is_denorm, is_inf, is_nan;
 
   Fp32Decoder uut(
     .data(data),
@@ -21,7 +21,6 @@ module tb_Fp32Decoder ();
     .mantissa(mantissa),
     .is_zero(is_zero),
     .is_denorm(is_denorm),
-    .is_norm(is_norm),
     .is_inf(is_inf),
     .is_nan(is_nan)
   );
@@ -35,7 +34,6 @@ module tb_Fp32Decoder ();
     `assert(mantissa,  0);
     `assert(is_zero,   1);
     `assert(is_denorm, 0);
-    `assert(is_norm,   0);
     `assert(is_inf,    0);
     `assert(is_nan,    0);
 
@@ -47,7 +45,6 @@ module tb_Fp32Decoder ();
     `assert(mantissa,  1);
     `assert(is_zero,   0);
     `assert(is_denorm, 1);
-    `assert(is_norm,   0);
     `assert(is_inf,    0);
     `assert(is_nan,    0);
 
@@ -59,7 +56,6 @@ module tb_Fp32Decoder ();
     `assert(mantissa,  0);
     `assert(is_zero,   0);
     `assert(is_denorm, 0);
-    `assert(is_norm,   1);
     `assert(is_inf,    0);
     `assert(is_nan,    0);
 
@@ -71,7 +67,6 @@ module tb_Fp32Decoder ();
     `assert(mantissa,  0);
     `assert(is_zero,   0);
     `assert(is_denorm, 0);
-    `assert(is_norm,   0);
     `assert(is_inf,    1);
     `assert(is_nan,    0);
 
@@ -83,7 +78,6 @@ module tb_Fp32Decoder ();
     `assert(mantissa,  0);
     `assert(is_zero,   1);
     `assert(is_denorm, 0);
-    `assert(is_norm,   0);
     `assert(is_inf,    0);
     `assert(is_nan,    0);
 
@@ -95,7 +89,6 @@ module tb_Fp32Decoder ();
     `assert(mantissa,  1);
     `assert(is_zero,   0);
     `assert(is_denorm, 1);
-    `assert(is_norm,   0);
     `assert(is_inf,    0);
     `assert(is_nan,    0);
 
@@ -107,7 +100,6 @@ module tb_Fp32Decoder ();
     `assert(mantissa,  0);
     `assert(is_zero,   0);
     `assert(is_denorm, 0);
-    `assert(is_norm,   1);
     `assert(is_inf,    0);
     `assert(is_nan,    0);
 
@@ -119,7 +111,6 @@ module tb_Fp32Decoder ();
     `assert(mantissa,  0);
     `assert(is_zero,   0);
     `assert(is_denorm, 0);
-    `assert(is_norm,   0);
     `assert(is_inf,    1);
     `assert(is_nan,    0);
 
@@ -131,7 +122,6 @@ module tb_Fp32Decoder ();
     `assert(mantissa,  1);
     `assert(is_zero,   0);
     `assert(is_denorm, 0);
-    `assert(is_norm,   0);
     `assert(is_inf,    0);
     `assert(is_nan,    1);
 

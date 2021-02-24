@@ -25,7 +25,6 @@ module Fp32Decoder (
 
   assign is_zero   =  exponent_all_clr &  mantissa_all_clr;
   assign is_denorm =  exponent_all_clr & !mantissa_all_clr;
-  assign is_norm   = !exponent_all_clr & !exponent_all_set;
   assign is_inf    =  exponent_all_set &  mantissa_all_clr;
   assign is_nan    =  exponent_all_set & !mantissa_all_clr;
 
